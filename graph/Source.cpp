@@ -1,17 +1,21 @@
 #include <iostream>
+#include <string>
 #include <cmath>
 using namespace std;
 
 int main() {
 	constexpr int range = 40;
-	int graph[range + 1][range + 1];
+	constexpr int rows = range + 1;
+	constexpr int cols = range + 1;
 
-	int rows = sizeof(graph) / sizeof(graph[0]);
-	int cols = sizeof(graph[0]) / sizeof(int);
-	int half_v = (rows - 1) / 2;
+	int half_v = range / 2;
+	int graph[rows][cols];
 
 	int range_x = 0;
 	int range_y = 0;
+
+	string color_x;
+	string color_y;
 
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++) {
