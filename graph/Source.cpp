@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <cmath>
+#include <functional>
 
 using namespace std;
 
@@ -27,17 +28,30 @@ void gen_graph(string**& graph, int range, vector<map<string, double>>& p) {
 		graph[i] = new string[cols];
 	}
 
+	string fill = "0";
+
 	string color_x = "\033[31m";
 	string color_y = "\033[31m";
 	string color_g = "\033[32m";
+	string color_z = "\033[30m";
 	string c_end = "\033[0m";
 
 	// Generate graph
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++) {
+			bool apply_color = true;
+
+			for (auto& point : p) {
+				if (i == -point["y"] + range / 2 and j == point["x"] + range / 2) {
+					graph[i][j] = color_g + "0" + c_end;
+					apply_color = false;
+				}
+			}
+
 			// Middle vertical row
 			if (j == half_v) {
-				graph[i][j] = color_y + to_string(range_y) + c_end;
+				if (apply_color)
+					graph[i][j] = color_y + to_string(range_y) + c_end;
 
 				if (i < half_v) // While on the positive side of 0
 					range_y--;
@@ -56,7 +70,8 @@ void gen_graph(string**& graph, int range, vector<map<string, double>>& p) {
 			}
 			// Middle horizontal row
 			else if (i == half_v) {
-				graph[i][j] = color_x + to_string(range_x) + c_end;
+				if (apply_color)
+					graph[i][j] = color_x + to_string(range_x) + c_end;
 
 				if (j < half_v) // While on the negative side of 0
 					range_x--;
@@ -70,13 +85,8 @@ void gen_graph(string**& graph, int range, vector<map<string, double>>& p) {
 					range_x = 0;
 			}
 			else {
-				graph[i][j] = to_string(0);
-			}
-
-			for (auto& point : p) {
-				if (i == point["y"] + range / 2 and j == point["x"] + range / 2) {
-					graph[i][j] = color_g + graph[i][j] + c_end;
-				}
+				if (apply_color)
+					graph[i][j] = color_z + fill + c_end;
 			}
 		}
 	}
@@ -92,27 +102,19 @@ void dp_graph(string**& graph, int range) {
 	}
 }
 
-vector<double> sec_deg_f(double a, double b, double c) {
-	// x = (-b +- sqrt(b^2 - 4ac)) / (2a)
-	double v_dif = sqrt(pow(b, 2) - 4 * a * c); // +-
+double first_deg_f(vector<double>& v, int& x) { return v[0] * x + v[1]; }
 
-	// ansure v_dif is a real number
-	if (!isfinite(v_dif)) {
-		cout << "The equation has no real roots" << endl;
-	}
+double sec_deg_f(vector<double>& v, int& x) { return v[0] * pow(x, 2) + v[1] * x + v[2]; }
 
-	double v1 = (-b + v_dif) / (2 * a);
-	double v2 = (-b - v_dif) / (2 * a);
+void func(vector<double>& v, int range, vector<map<string, double>>& p) {
+	map<int, function<double(vector<double>&, int&)>> f_x;
+	f_x[1] = first_deg_f;
+	f_x[2] = sec_deg_f;
 
-	vector<double> x{ v1, v2 };
-	return x;
-}
-
-void first_deg_f(double k, double m, int range, vector<map<string, double>>& p) {
 	for (int x = -range / 2; x <= range / 2; x++) {
 		map<string, double> point;
 		point["x"] = x;
-		point["y"] = k * x + m;
+		point["y"] = round(f_x[v.size() - 1](v, x));
 		p.push_back(point);
 	}
 }
@@ -121,11 +123,19 @@ int main() {
 	const int range = 40;
 	string** graph = nullptr;
 
-	vector<map<string, double>> p; // måste specifiera hur många objekt på vectorn???
-	int b = 2;
-	int c = 3;
+	vector<double> variables;
 
-	first_deg_f(b, c, range, p);
+	vector<map<string, double>> p;
+
+	cout << "Enter variables (00) to stop, ... ax^2 + bx + c" << endl;
+
+	double input;
+
+	variables.push_back(0.2);
+	variables.push_back(2);
+	variables.push_back(-5);
+
+	func(variables, range, p);
 
 	gen_graph(graph, range, p);
 
