@@ -8,26 +8,13 @@
 
 using namespace std;
 
-void gen_graph(string**& graph, int range, vector<map<string, double>>& p) {
+void gen_graph(vector<vector<string>>& graph, int range, vector<map<string, double>>& p) {
 	int rows = range + 1;
 	int cols = range + 1;
 
 	int half_range = range / 2;
 	int range_x = 0;
 	int range_y = 0;
-
-	/*
-	Graph is a pointer that points to an array of pointers,
-	and each of these pointers in turn points to a row of strings,
-	forming a 2D array.This is a common technique for dynamically allocating a
-	2D array where the size of the array is determined at runtime.
-	*/
-
-	// Dynamically allocate memory for the graph array
-	graph = new string * [rows];
-	for (int i = 0; i < rows; i++) {
-		graph[i] = new string[cols];
-	}
 
 	// filler for empty space
 	string fill = "0";
@@ -38,10 +25,13 @@ void gen_graph(string**& graph, int range, vector<map<string, double>>& p) {
 	string color_g = "\033[32m"; // graph
 	string color_z = "\033[30m"; // filler / empty space
 	string color_0 = "\033[34m"; // x = 0
-	string c_end = "\033[0m"; // end of color change
+	string c_end = "\033[0m";    // end of color change
+
+	// initialize the graph filling every vector with fill
+	graph = vector<vector<string>>(rows, vector<string>(cols, color_z + fill + c_end));
 
 	// generate graph
-	for (int i = 0; i < rows; i++) {
+	for (int i = 0; i < rows; i++)
 		for (int j = 0; j < cols; j++) {
 			bool apply_color = true; // not to replace the equation
 
@@ -97,16 +87,10 @@ void gen_graph(string**& graph, int range, vector<map<string, double>>& p) {
 				else if (range_x > 9) // 0 1 2 3 ...
 					range_x = 0;
 			}
-			// fill empty space
-			else {
-				if (apply_color)
-					graph[i][j] = color_z + fill + c_end;
-			}
 		}
-	}
 }
 
-void dp_graph(string**& graph, int range) {
+void dp_graph(const vector<vector<string>>& graph, int range) {
 	// display graph
 	for (int i = 0; i <= range; i++) {
 		for (int j = 0; j <= range; j++) {
@@ -133,10 +117,8 @@ void func(vector<double> v, int range, vector<map<string, double>>& p) {
 
 int main() {
 	const int range = 40;
-	string** graph = nullptr;
-
+	vector<vector<string>> graph;
 	vector<double> variables;
-
 	vector<map<string, double>> p;
 
 	cout << "Enter variables, (404) to stop, ... ax^2 + bx + c" << endl;
@@ -149,20 +131,8 @@ int main() {
 	} while (input != 404);
 
 	func(variables, range, p);
-
 	gen_graph(graph, range, p);
-
 	dp_graph(graph, range);
 
-	/*
-	// Deallocate dynamically allocated memory
-	for (int i = 0; i <= range; i++) {
-		delete[] graph[i];
-	}
-	delete[] graph;
-	*/
-
-	int i;
-	cin >> i;
 	return 0;
 }
