@@ -4,6 +4,7 @@
 #include <string>
 #include <cmath>
 #include <functional>
+#include <algorithm>
 
 using namespace std;
 
@@ -11,7 +12,7 @@ void gen_graph(string**& graph, int range, vector<map<string, double>>& p) {
 	int rows = range + 1;
 	int cols = range + 1;
 
-	int half_v = range / 2;
+	int half_range = range / 2;
 	int range_x = 0;
 	int range_y = 0;
 
@@ -28,62 +29,75 @@ void gen_graph(string**& graph, int range, vector<map<string, double>>& p) {
 		graph[i] = new string[cols];
 	}
 
+	// filler for empty space
 	string fill = "0";
 
-	string color_x = "\033[31m";
-	string color_y = "\033[31m";
-	string color_g = "\033[32m";
-	string color_z = "\033[30m";
-	string c_end = "\033[0m";
+	// color variables
+	string color_x = "\033[31m"; // x-axis
+	string color_y = "\033[31m"; // y-axis
+	string color_g = "\033[32m"; // graph
+	string color_z = "\033[30m"; // filler / empty space
+	string color_0 = "\033[34m"; // x = 0
+	string c_end = "\033[0m"; // end of color change
 
-	// Generate graph
+	// generate graph
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++) {
-			bool apply_color = true;
+			bool apply_color = true; // not to replace the equation
 
+			// display equation
 			for (auto& point : p) {
-				if (i == -point["y"] + range / 2 and j == point["x"] + range / 2) {
-					graph[i][j] = color_g + "0" + c_end;
+				// y gets bigger as i goes towards 0, while x gets bigger as i goes towards infinity
+				if (i == -point["y"] + half_range and j == point["x"] + half_range) {
+					if (i == half_range)
+						graph[i][j] = color_0 + "0" + c_end;
+					else
+						graph[i][j] = color_g + "0" + c_end;
 					apply_color = false;
 				}
 			}
 
-			// Middle vertical row
-			if (j == half_v) {
+			// set numbers on x-axis
+			if (j == half_range) {
 				if (apply_color)
 					graph[i][j] = color_y + to_string(range_y) + c_end;
 
-				if (i < half_v) // While on the positive side of 0
+				// While on the positive side of 0
+				if (i < half_range)
 					range_y--;
-				else // While on the negative side of 0
+				// While on the negative side of 0
+				else
 					range_y++;
 
-				// Switch at center
-				if (range_y < 0 and i < half_v) // Count 0 9 8 7 ...
+				// switch at tens
+				if (range_y < 0) // 0 9 8 7 ...
 					range_y = 9;
-				else if (range_y > 9) // Count 0 1 2 3 ...
+				else if (range_y > 9) // 0 1 2 3 ...
 					range_y = 0;
 
-				// Hotfix
-				if (i == half_v) // Move range_x once at center
+				// move range_x once at center (replaced by y-axis)
+				if (i == half_range)
 					range_x++;
 			}
-			// Middle horizontal row
-			else if (i == half_v) {
+			// set numbers on y-axis
+			else if (i == half_range) {
 				if (apply_color)
 					graph[i][j] = color_x + to_string(range_x) + c_end;
 
-				if (j < half_v) // While on the negative side of 0
+				// While on the negative side of 0
+				if (j < half_range)
 					range_x--;
-				else // While on the positive side of 0
+				// While on the positive side of 0
+				else
 					range_x++;
 
-				// Switch at center
-				if (range_x < 0 and j < half_v) // Count 0 9 8 7 ...
+				// switch at tens
+				if (range_x < 0) // 0 9 8 7 ...
 					range_x = 9;
-				else if (range_x > 9) // Count 0 1 2 3 ...
+				else if (range_x > 9) // 0 1 2 3 ...
 					range_x = 0;
 			}
+			// fill empty space
 			else {
 				if (apply_color)
 					graph[i][j] = color_z + fill + c_end;
@@ -93,28 +107,26 @@ void gen_graph(string**& graph, int range, vector<map<string, double>>& p) {
 }
 
 void dp_graph(string**& graph, int range) {
-	// Display graph
+	// display graph
 	for (int i = 0; i <= range; i++) {
 		for (int j = 0; j <= range; j++) {
 			cout << graph[i][j] << " ";
 		}
+		// separate arrays
 		cout << endl;
 	}
 }
 
-double first_deg_f(vector<double>& v, int& x) { return v[0] * x + v[1]; }
-
-double sec_deg_f(vector<double>& v, int& x) { return v[0] * pow(x, 2) + v[1] * x + v[2]; }
-
-void func(vector<double>& v, int range, vector<map<string, double>>& p) {
-	map<int, function<double(vector<double>&, int&)>> f_x;
-	f_x[1] = first_deg_f;
-	f_x[2] = sec_deg_f;
+void func(vector<double> v, int range, vector<map<string, double>>& p) {
+	// reverse vector to be able to loop with i
+	reverse(v.begin(), v.end());
 
 	for (int x = -range / 2; x <= range / 2; x++) {
 		map<string, double> point;
 		point["x"] = x;
-		point["y"] = round(f_x[v.size() - 1](v, x));
+		for (int i = v.size() - 1; i >= 0; i--) { // v{a, b, c} => v_r = {c, b, a}. v_r[i] = a; x^i; i index of a = 2
+			point["y"] += round(v[i] * pow(x, i));
+		}
 		p.push_back(point);
 	}
 }
@@ -127,13 +139,14 @@ int main() {
 
 	vector<map<string, double>> p;
 
-	cout << "Enter variables (00) to stop, ... ax^2 + bx + c" << endl;
-
+	cout << "Enter variables, (404) to stop, ... ax^2 + bx + c" << endl;
 	double input;
 
-	variables.push_back(0.2);
-	variables.push_back(2);
-	variables.push_back(-5);
+	do {
+		cin >> input;
+		if (input != 404)
+			variables.push_back(input);
+	} while (input != 404);
 
 	func(variables, range, p);
 
