@@ -20,7 +20,7 @@ namespace graph_color {
 class Graph {
 public:
 
-	Graph(int range) : range(range), rows(range + 1), cols(range + 1), half_range(range / 2) {
+	Graph(int range) : range(range) {
 		// initialize the graph filling every vector with empty space
 		graph = vector<vector<string>>(rows, vector<string>(cols, " "));
 	}
@@ -72,7 +72,7 @@ public:
 			}
 	}
 
-	void displayGraph() {
+	void plotGraph() {
 		// iterate through and display all
 		for (int i = 0; i <= range; i++) {
 			for (int j = 0; j <= range; j++) {
@@ -84,7 +84,7 @@ public:
 		}
 	}
 
-	void calculateFunctionPoints(vector<double> coeff, vector<map<string, double>>& points) {
+	void calculateFunctionPoints(vector<double> coeff) {
 		// reverse vector to be able to loop with i
 		reverse(coeff.begin(), coeff.end());
 
@@ -95,23 +95,23 @@ public:
 				// v{a, b, c} => v_r = {c, b, a}. v_r[i] = a; x^i; i index of a = 2
 				point["y"] += round(coeff[i] * pow(x, i));
 			}
-			points.push_back(point);
+			// code here
 		}
 	}
 
-	void displayFunction(vector<map<string, double>>& points) {
-		for (int i = 0; i < rows; i++)
-			for (int j = 0; j < cols; j++) {
-				for (auto& point : points) {
-					// y gets bigger as i goes towards 0, while x gets bigger as i goes towards infinity
-					if (i == -point["y"] + half_range and j == point["x"] + half_range) {
-						if (i == half_range)
-							graph[i][j] = graph_color::zero + "0" + graph_color::end;
-						else
-							graph[i][j] = graph_color::graph + "0" + graph_color::end;
+	void plotFunctions() {
+		for (auto& func : functions)
+			for (int i = 0; i < rows; i++)
+				for (int j = 0; j < cols; j++)
+					for (auto& point : func) {
+						// y gets bigger as i goes towards 0, while x gets bigger as i goes towards infinity
+						if (i == -point["y"] + half_range and j == point["x"] + half_range) {
+							if (i == half_range)
+								graph[i][j] = graph_color::zero + "0" + graph_color::end;
+							else
+								graph[i][j] = graph_color::graph + "0" + graph_color::end;
+						}
 					}
-				}
-			}
 	}
 
 private:
@@ -119,15 +119,15 @@ private:
 	int rows = range + 1;
 	int cols = range + 1;
 	int half_range = range / 2;
+
+	vector<vector<map<string, double>>> functions;
+
 	vector<vector<string>> graph;
 };
 
 int main() {
 	const int RANGE = 40;
 	vector<double> variables;
-	vector<map<string, double>> points;
-
-	int roots;
 
 	cout << "Enter variables, (404) to stop, ... ax^2 + bx + c" << endl;
 	double input;
@@ -140,13 +140,14 @@ int main() {
 
 	Graph calculator(RANGE);
 	calculator.initializeGraph();
-	calculator.calculateFunctionPoints(variables, points);
-	calculator.displayFunction(points);
-	calculator.displayGraph();
+	calculator.calculateFunctionPoints(variables);
+	calculator.plotFunctions();
+	calculator.plotGraph();
 
-	/* info
-	cout << format("roots (x = 0; {}): ", roots) << endl;
+	// info
+	cout << "roots; x = 0:" << endl;
 
+	/*
 	for (auto& p : points)
 		if (p["x"] == 0) {
 			cout << format("({};{})", p["x"], p["y"]) << endl;
