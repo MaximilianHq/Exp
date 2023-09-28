@@ -12,8 +12,9 @@ using namespace std;
 namespace graph_color {
 	const string axis_x = "\033[31m";	// x-axis
 	const string axis_y = "\033[31m";	// y-axis
-	const string graph = "\033[32m";	// graph
-	const string zero = "\033[34m";		// x = 0
+	const string function = "\033[32m";	// graph
+	const string intersect = "\033[35m";// intersect (graph)
+	const string root = "\033[34m";		// x = 0
 	const string end = "\033[0m";		// end of color change
 }
 
@@ -88,6 +89,8 @@ public:
 		// reverse vector to be able to loop with i
 		reverse(coeff.begin(), coeff.end());
 
+		vector<map<string, double>> func;
+
 		for (int x = -range / 2; x <= range / 2; x++) {
 			map<string, double> point;
 			point["x"] = x;
@@ -95,23 +98,27 @@ public:
 				// v{a, b, c} => v_r = {c, b, a}. v_r[i] = a; x^i; i index of a = 2
 				point["y"] += round(coeff[i] * pow(x, i));
 			}
-			// code here
+			// add point to function
+			func.push_back(point);
 		}
+		// add function to function list
+		functions.push_back(func);
 	}
 
 	void plotFunctions() {
-		for (auto& func : functions)
+		for (auto& func : functions) // iterate through every function
 			for (int i = 0; i < rows; i++)
 				for (int j = 0; j < cols; j++)
-					for (auto& point : func) {
-						// y gets bigger as i goes towards 0, while x gets bigger as i goes towards infinity
+					for (auto& point : func)
+						// y becomes larger as i goes towards 0, while x becomes larger as i goes towards infinity
 						if (i == -point["y"] + half_range and j == point["x"] + half_range) {
 							if (i == half_range)
-								graph[i][j] = graph_color::zero + "0" + graph_color::end;
+								graph[i][j] = graph_color::root + "0" + graph_color::end;
+							else if (graph[i][j] != " " and j != half_range) // <-- prevent y axis override
+								graph[i][j] = graph_color::intersect + "0" + graph_color::end;
 							else
-								graph[i][j] = graph_color::graph + "0" + graph_color::end;
+								graph[i][j] = graph_color::function + "0" + graph_color::end;
 						}
-					}
 	}
 
 private:
@@ -125,34 +132,68 @@ private:
 	vector<vector<string>> graph;
 };
 
+void displayMenu() {
+	cout << "\033[1;36m"
+		"\n=============="
+		"\n1. New function"
+		"\n2. Edit / Delete"
+		"\n3. Plot Graph"
+		"\n4. Exit"
+		"\n=============="
+		"\033[0m" << endl;
+}
+
 int main() {
 	const int RANGE = 40;
-	vector<double> variables;
-
-	cout << "Enter variables, (404) to stop, ... ax^2 + bx + c" << endl;
-	double input;
-
-	do {
-		cin >> input;
-		if (input != 404)
-			variables.push_back(input);
-	} while (input != 404);
 
 	Graph calculator(RANGE);
-	calculator.initializeGraph();
-	calculator.calculateFunctionPoints(variables);
-	calculator.plotFunctions();
-	calculator.plotGraph();
 
-	// info
-	cout << "roots; x = 0:" << endl;
+	const int MENU_EXIT = 4;
+	int menu_choice = MENU_EXIT;
 
-	/*
-	for (auto& p : points)
-		if (p["x"] == 0) {
-			cout << format("({};{})", p["x"], p["y"]) << endl;
+	do {
+		displayMenu();
+
+		cout << ">>> ";
+		cin >> menu_choice;
+
+		switch (menu_choice) {
+		case 1: {
+			double input;
+			vector<double> function_var;
+
+			cout << "Enter variables, 's' to stop, ... ax ^ 2 + bx + c" << endl;
+
+			do {
+				cin >> input;
+
+				if (cin.fail()) {
+					cin.clear();
+					cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+					break;
+				}
+				else
+					function_var.push_back(input);
+			} while (true);
+
+			calculator.calculateFunctionPoints(function_var);
+
+			break;
 		}
-	*/
+		case 2: {
+			break;
+		}
+		case 3: {
+			calculator.initializeGraph();
+			calculator.plotFunctions();
+			calculator.plotGraph();
+
+			break;
+		}
+		default:
+			break;
+		}
+	} while (menu_choice != MENU_EXIT);
 
 	return 0;
 }
