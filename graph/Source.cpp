@@ -86,6 +86,8 @@ public:
 	}
 
 	void calculateFunctionPoints(vector<double> coeff) {
+		// store function variables
+		function_variables.push_back(coeff);
 		// reverse vector to be able to loop with i
 		reverse(coeff.begin(), coeff.end());
 
@@ -121,6 +123,29 @@ public:
 						}
 	}
 
+	void displayFunctions() {
+		int func_index = 0;
+		for (auto& func : functions) {
+			cout << "\nFunction " << func_index + 1 << endl;
+			cout << "f(x):";
+			for (auto& var : function_variables[func_index])
+				cout << " " << var;
+			cout << endl;
+		}
+	}
+
+	bool deleteFunction(int& i) {
+		if (i >= 0 && i < functions.size()) {
+			// erase vector at specified index
+			functions.erase(functions.begin() + i);
+			return true;
+		}
+		else {
+			std::cout << "Index is out of bounds." << std::endl;
+			return false;
+		}
+	}
+
 private:
 	int range;
 	int rows = range + 1;
@@ -128,6 +153,7 @@ private:
 	int half_range = range / 2;
 
 	vector<vector<map<string, double>>> functions;
+	vector<vector<double>> function_variables;
 
 	vector<vector<string>> graph;
 };
@@ -143,6 +169,51 @@ void displayMenu() {
 		"\033[0m" << endl;
 }
 
+void displayMenuEdit() {
+	cout << "\033[1;31m"
+		"\n=============="
+		"\n1. Edit"
+		"\n2. Delete"
+		"\n3. Reset"
+		"\n4. Exit"
+		"\n=============="
+		"\033[0m" << endl;
+}
+
+template <typename T>
+void InputBracket(T& cinput) {
+	cout << ">>> ";
+	cin >> cinput;
+}
+
+void GraphEditLogic(Graph& calculator) {
+	int input;
+	const int EXIT = 4;
+
+	do {
+		calculator.displayFunctions();
+		displayMenuEdit();
+
+		InputBracket(input);
+
+		switch (input)
+		{
+		case 1: {
+		}
+		case 2: {
+			cout << "Select function to delete:" << endl;
+			do {
+				InputBracket(input);
+			} while (!calculator.deleteFunction(input));
+		}
+		case 3: {
+		}
+		default:
+			break;
+		}
+	} while (input != EXIT);
+}
+
 int main() {
 	const int RANGE = 40;
 
@@ -154,10 +225,10 @@ int main() {
 	do {
 		displayMenu();
 
-		cout << ">>> ";
-		cin >> menu_choice;
+		InputBracket(menu_choice);
 
-		switch (menu_choice) {
+		switch (menu_choice)
+		{
 		case 1: {
 			double input;
 			vector<double> function_var;
@@ -165,7 +236,7 @@ int main() {
 			cout << "Enter variables, 's' to stop, ... ax ^ 2 + bx + c" << endl;
 
 			do {
-				cin >> input;
+				InputBracket(input);
 
 				if (cin.fail()) {
 					cin.clear();
@@ -181,6 +252,8 @@ int main() {
 			break;
 		}
 		case 2: {
+			GraphEditLogic(calculator);
+
 			break;
 		}
 		case 3: {
