@@ -16,6 +16,16 @@ namespace graph_color {
 	const string end = "\033[0m";			// end of color change
 }
 
+struct Point {
+	int x = 0;
+	int y = 0;
+};
+
+struct Function {
+	vector<double> variables;
+	vector<Point> points;
+};
+
 class Graph {
 public:
 
@@ -84,34 +94,34 @@ public:
 	}
 
 	void calculateFunctionPoints(vector<double> coeff) {
+		// initialize new Function
+		Function new_function;
 		// store function variables
-		function_variables.push_back(coeff);
+		new_function.variables = coeff;
 		// reverse vector to be able to loop with i
 		reverse(coeff.begin(), coeff.end());
 
-		vector<map<string, double>> func;
-
 		for (int x = -range / 2; x <= range / 2; x++) {
-			map<string, double> point;
-			point["x"] = x;
+			Point new_point;
+			new_point.x = x;
 			for (int i = coeff.size() - 1; i >= 0; i--) {
 				// v{a, b, c} => v_r = {c, b, a}. v_r[i] = a; x^i; i index of a = 2
-				point["y"] += round(coeff[i] * pow(x, i));
+				new_point.y += round(coeff[i] * pow(x, i));
 			}
 			// add point to function
-			func.push_back(point);
+			new_function.points.push_back(new_point);
 		}
 		// add function to function list
-		functions.push_back(func);
+		functions.push_back(new_function);
 	}
 
 	void plotFunctions() {
 		for (auto& func : functions) // iterate through every function
 			for (int i = 0; i < rows; i++)
 				for (int j = 0; j < cols; j++)
-					for (auto& point : func)
+					for (auto& point : func.points)
 						// y becomes larger as i goes towards 0, while x becomes larger as i goes towards infinity
-						if (i == -point["y"] + range_half and j == point["x"] + range_half) {
+						if (i == -point.y + range_half and j == point.x + range_half) {
 							if (i == range_half)
 								graph[i][j] = graph_color::root + "0" + graph_color::end;
 							else if (graph[i][j] != " " and j != range_half) // <-- prevent y axis override
@@ -126,7 +136,7 @@ public:
 		for (auto& func : functions) {
 			cout << "\nFunction " << func_index + 1 << endl;
 			cout << "f(x):";
-			for (auto& var : function_variables[func_index++])
+			for (auto& var : func.variables)
 				cout << " " << var;
 			cout << endl;
 		}
@@ -159,8 +169,7 @@ private:
 	int cols;
 	int range_half;
 
-	vector<vector<map<string, double>>> functions;
-	vector<vector<double>> function_variables;
+	vector<Function> functions;
 	vector<vector<string>> graph;
 };
 
@@ -188,9 +197,9 @@ void displayMenuEdit() {
 }
 
 template <typename T>
-void InputBracket(T& cinput) {
+void InputBracket(T& input) {
 	cout << ">>> ";
-	cin >> cinput;
+	cin >> input;
 }
 
 void MenuDeleteLogic(Graph& calculator) {
