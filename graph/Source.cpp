@@ -7,6 +7,41 @@
 
 using namespace std;
 
+// Text Color Codes:
+// \033[30m // Black
+// \033[31m // Red
+// \033[32m // Green
+// \033[33m // Yellow
+// \033[34m // Blue
+// \033[35m // Magenta
+// \033[36m // Cyan
+// \033[37m // White
+
+// Background Color Codes:
+// \033[40m // Black
+// \033[41m // Red
+// \033[42m // Green
+// \033[43m // Yellow
+// \033[44m // Blue
+// \033[45m // Magenta
+// \033[46m // Cyan
+// \033[47m // White
+
+// Text Style Codes:
+// \033[0m  // Reset all styles
+// \033[1m  // Bold
+// \033[2m  // Faint (not widely supported)
+// \033[3m  // Italic (not widely supported)
+// \033[4m  // Underline
+// \033[5m  // Slow Blink (not widely supported)
+// \033[6m  // Rapid Blink (not widely supported)
+// \033[7m  // Reverse Video (swap text and background colors)
+// \033[8m  // Conceal (not widely supported)
+// \033[9m  // Crossed Out (not widely supported)
+
+// Reset All Attributes:
+// \033[0m
+
 namespace graph_color {
 	const string axis_x = "\033[31m";		// x-axis
 	const string axis_y = "\033[31m";		// y-axis
@@ -93,7 +128,7 @@ public:
 		}
 	}
 
-	void calculateFunctionPoints(vector<double> coeff) {
+	void calculateFunctionPoints(vector<double>& coeff) {
 		// initialize new Function
 		Function new_function;
 		// store function variables
@@ -132,9 +167,9 @@ public:
 	}
 
 	void displayFunctions() {
-		int func_index = 0;
+		int func_index = 1;
 		for (auto& func : functions) {
-			cout << "\nFunction " << func_index + 1 << endl;
+			cout << "\nFunction " << func_index++ << endl;
 			cout << "f(x):";
 			for (auto& var : func.variables)
 				cout << " " << var;
@@ -142,20 +177,26 @@ public:
 		}
 	}
 
-	bool deleteFunction(int& i) {
-		--i;
+	int sizeFunctions() {
+		return functions.size();
+	}
+
+	bool deleteFunction(int i) {
 		if (i >= 0 and i < functions.size()) {
 			// erase vector at specified index
 			functions.erase(functions.begin() + i);
 			return true;
 		}
-		else {
-			std::cout << format("Index ({}) is out of bounds.", ++i) << std::endl;
-			return false;
-		}
+
+		return false;
 	}
 
-	void setGraphRange(int& r) {
+	void deleteFunctionAll() {
+		for (int i = 0; i < functions.size(); i++)
+			deleteFunction(i);
+	}
+
+	void setGraphRange(const int r) {
 		// needs safety
 		range = r;
 		rows = range + 1;
@@ -219,14 +260,11 @@ void MenuDeleteLogic(Graph& calculator) {
 			do {
 				InputBracket(input);
 				cout << input;
-			} while (!calculator.deleteFunction(input));
+			} while (!calculator.deleteFunction(input - 1));
 			break;
 		}
 		case 2: {
-			int i = 1;
-			while (calculator.deleteFunction(i)) {
-				i++;
-			}
+			calculator.deleteFunctionAll();
 			break;
 		}
 		default:
